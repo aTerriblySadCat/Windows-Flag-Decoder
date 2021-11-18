@@ -38,7 +38,7 @@ The application allows for other files to be skimmed in case a FlagFile does not
 This works by taking the file and allowing the user to enter a RegEx string to filter out all flag names.
 
 These flag names are then added to a temporary .cpp file in such a way that it prints the results in the FlagFile format.
-- The format is std::cout << "flagName\n" << std::hex << flagName << std::endl;
+- The format is `std::cout << "flagName\n" << std::hex << flagName << std::endl;`
 - This is so it corresponds with the expected FlagFile format once the output the C++ executable file makes is read and interpreted.
 	
 This .cpp file is then compiled (using Visual Studio compilation with help of vcvars64.bat and cl.exe) and executed.
