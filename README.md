@@ -26,7 +26,7 @@ It places a Windows flag name on one line and the corresponding code on the next
 
 It does this on repeat for all the flags.
 
-The codes may be 0x prepended or not, they are removed by the program and are optional but allowed.
+The codes may be 0x prepended or not. The 0x is removed by the program and is optional but allowed.
 
 The codes are expected to all be in hexadecimal.
 
