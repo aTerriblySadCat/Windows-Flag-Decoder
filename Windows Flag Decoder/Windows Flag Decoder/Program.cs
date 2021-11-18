@@ -86,7 +86,8 @@ namespace WindowsFlagDecoder
 
 				if (choiceNumber == 1)
 				{
-					Console.Write("Please enter the name and path of the FlagFile: ");
+					Console.WriteLine();
+					Console.WriteLine("Please enter the name and path of the FlagFile: ");
 					string flagFilePath = Console.ReadLine();
 					try
 					{
@@ -153,33 +154,6 @@ namespace WindowsFlagDecoder
 			FindMatchingFlags(flagToDecode);
 
 			return;
-		}
-
-		/// <summary>
-		/// Convert the given hexStr to an integer, interpreted as a hexadecimal number. Also removes any prepended 0x, should there be one.
-		/// </summary>
-		/// <param name="hexStr">The string to convert.</param>
-		/// <returns></returns>
-		private static int HexStrToInt(string hexStr)
-		{
-			if (hexStr != null)
-			{
-				if (hexStr.StartsWith("0x"))
-				{
-					hexStr = hexStr.Remove(0, 2);
-				}
-
-				try
-				{
-					return int.Parse(hexStr, System.Globalization.NumberStyles.HexNumber);
-				}
-				catch (Exception exc)
-				{
-					throw exc;
-				}
-			}
-
-			return 0;
 		}
 
 		private static void ReadFlagFile(string flagFilePath)
@@ -341,6 +315,33 @@ namespace WindowsFlagDecoder
 			{
 				throw new Exception("The file <" + newFileName + "> does not exist!");
 			}
+		}
+
+		/// <summary>
+		/// Convert the given hexStr to an integer, interpreted as a hexadecimal number. Also removes any prepended 0x, should there be one.
+		/// </summary>
+		/// <param name="hexStr">The string to convert.</param>
+		/// <returns></returns>
+		private static int HexStrToInt(string hexStr)
+		{
+			if (hexStr != null)
+			{
+				if (hexStr.StartsWith("0x"))
+				{
+					hexStr = hexStr.Remove(0, 2);
+				}
+
+				try
+				{
+					return int.Parse(hexStr, System.Globalization.NumberStyles.HexNumber);
+				}
+				catch (Exception exc)
+				{
+					throw exc;
+				}
+			}
+
+			return 0;
 		}
 
 		/// <summary>
@@ -559,6 +560,21 @@ namespace WindowsFlagDecoder
 				{
 					dataToFilter += match.Value + "\n";
 					finalMatches.Add(match.Value);
+				}
+
+				Console.WriteLine();
+				Console.WriteLine(finalMatches.Count + " entries found!");
+				Console.WriteLine("Here is a sample: ");
+				for(int i = 0; i < 5; i++)
+				{
+					if(i < finalMatches.Count)
+					{
+						Console.WriteLine(i + " - " + finalMatches[i]);
+					}
+					else
+					{
+						break;
+					}
 				}
 			}
 
