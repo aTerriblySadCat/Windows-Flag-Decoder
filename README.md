@@ -10,7 +10,7 @@ However, the results from this tool should significantly narrow down potential c
 The tool will take a flag code from the user and attempt to decode it.
 It does this by taking the flag to decode and bitwise AND'ing (&) it with a list of Windows flags.
 This list is expected to be a file in a specific format, the FlagFile format further described below.
-The application allows for a pre-existing FlagFile to be used or for a Windows C++ header file to be skimmed for flags and then saved as a FlagFile.
+The application allows for a pre-existing FlagFile to be used or for another file to be skimmed for flag names and then saved as a FlagFile.
 The flags that may potentially be a part of the inputted flag are then presented to the user.
 
 ## FlagFile Format
@@ -21,10 +21,12 @@ The codes may be 0x prepended or not, they are removed by the program and are op
 The codes are expected to all be in hexadecimal.
 The FlagFile is in plain text and free editing of the file is allowed, even encouraged to save time in case small amounts of flags are to be considered.
 
-## Skimming C++ header files
-The application allows for C++ header files to be skimmed in case a FlagFile does not yet exist for use.
-This works in taking a C++ header file and allowing the user to enter a RegEx string to filter out all flag names.
+## Skimming other files
+The application allows for other files to be skimmed in case a FlagFile does not yet exist for use.
+This works by taking the file and allowing the user to enter a RegEx string to filter out all flag names.
 These flag names are then added to a temporary .cpp file in such a way that it prints the results in the FlagFile format.
+	The format is std::cout << "flagName\n" << std::hex << flagName << std::endl;
+	This is so it corresponds with the expected FlagFile format once the output the C++ executable file make is read and interpreted.
 This .cpp file is then compiled (using Visual Studio compilation with help of vcvars64.bat and cl.exe) and executed.
 The results printed (which are the flag names and codes in FlagFile format) by this process are then retrieved by the Windows Flag Decoder process.
-The user can then choose to do this for more header files, or save the current file for later use.
+The user can then choose to do this for more files, or save the current file for later use.

@@ -92,7 +92,7 @@ namespace WindowsFlagDecoder
 				{
 					Console.WriteLine();
 					Console.WriteLine("Press enter without entering a value if you're done with adding flags.");
-					Console.Write("Please enter the name of the Windows C++ header file (.h) where the names of the desired flags are located: ");
+					Console.Write("Please enter the name of the file where the desired flag names are located: ");
 					string flagFilePath = Console.ReadLine();
 					if(flagFilePath == null || flagFilePath == "")
 					{
@@ -488,6 +488,20 @@ namespace WindowsFlagDecoder
 		{
 			string cppFileStr = "#include <iostream>\n";
 			cppFileStr += "#include <Windows.h>\n";
+
+			Console.WriteLine();
+			Console.WriteLine("Press enter without a value to stop adding headers.");
+			Console.WriteLine("Some files may require additional header (particularly non-Windows files) in order to be dynamically retrieved. Add them here.");
+			while(true)
+			{
+				string headerToAdd = Console.ReadLine();
+				if(headerToAdd == null || headerToAdd == "")
+				{
+					break;
+				}
+				cppFileStr += "#include <" + headerToAdd + ">\n";
+			}
+
 			cppFileStr += "int main()\n";
 			cppFileStr += "{\n";
 			int lineCount = 4;
