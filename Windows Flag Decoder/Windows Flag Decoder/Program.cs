@@ -9,9 +9,16 @@ namespace WindowsFlagDecoder
 	public class Program
 	{
 		/// <summary>
-		/// The flags, where the key is the name of the flag, and the value is the code.
+		/// The flags to check against the flagToDecode given by the user.
 		/// </summary>
 		private static Dictionary<string, int> flags = new Dictionary<string, int>();
+		/// <summary>
+		/// Temporary storage for flags loaded in from another file.
+		/// </summary>
+		private static Dictionary<string, int> newFlags = new Dictionary<string, int>();
+		/// <summary>
+		/// A number of known paths to the vcvars64.bat file on Windows systems.
+		/// </summary>
 		private static string[] vcvars64Paths = new string[]
 		{
 			"\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\"",
@@ -27,178 +34,137 @@ namespace WindowsFlagDecoder
 
 		public static void Main(string[] args)
 		{
-			Console.Write("Please enter the flag to decode (in hexadecimal format): ");
-			string flagToDecodeStr = Console.ReadLine();
 			int flagToDecode = 0;
-			if(flagToDecodeStr == null)
+			while (true)
 			{
-				Console.WriteLine("Please enter a value!");
-				return;
-			}
-			else
-			{
-				try
+				Console.Write("Please enter the flag to decode (in hexadecimal format): ");
+				string flagToDecodeStr = Console.ReadLine();
+				if (flagToDecodeStr == null || flagToDecodeStr == "")
 				{
-					flagToDecode = HexStrToInt(flagToDecodeStr);
+					Console.WriteLine("Please enter a value!");
 				}
-				catch(Exception exc)
+				else
 				{
-					Console.WriteLine("Invalid flag code <" + flagToDecodeStr + "> used!");
-					return;
-				}
-			}
-
-			Console.WriteLine();
-			Console.WriteLine("1. Select FlagFile.");
-			Console.WriteLine("2. Create FlagFile.");
-			Console.Write("Please enter the number of your choice: ");
-			string choiceNumberStr = Console.ReadLine();
-			int choiceNumber = 0;
-			if(choiceNumberStr == null)
-			{
-				Console.WriteLine("Please enter a value!");
-				return;
-			}
-			else
-			{
-				try
-				{
-					choiceNumber = int.Parse(choiceNumberStr);
-				}
-				catch(Exception exc)
-				{
-					Console.WriteLine(exc.Message);
-					return;
-				}
-			}
-
-			if(choiceNumber == 1)
-			{
-				Console.Write("Please enter the name and path of the FlagFile: ");
-				string flagFilePath = Console.ReadLine();
-				try
-				{
-					ReadFlagFile(flagFilePath);
-				} 
-				catch(Exception exc)
-				{
-					Console.WriteLine(exc.Message);
-					return;
-				}
-			}
-			else if(choiceNumber == 2)
-			{
-				while (true)
-				{
-					Console.WriteLine();
-					Console.WriteLine("Press enter without entering a value if you're done with adding flags.");
-					Console.Write("Please enter the name of the file where the desired flag names are located: ");
-					string flagFilePath = Console.ReadLine();
-					if(flagFilePath == null || flagFilePath == "")
-					{
-						break;
-					}
-
 					try
 					{
-						ReadNewFile(flagFilePath);
+						flagToDecode = HexStrToInt(flagToDecodeStr);
+						break;
+					}
+					catch (Exception)
+					{
+						Console.WriteLine("Invalid flag code <" + flagToDecodeStr + "> used!");
+					}
+				}
+			}
+
+			while (true)
+			{
+				Console.WriteLine();
+				Console.WriteLine("1. Add FlagFile.");
+				Console.WriteLine("2. Create New Flagfile.");
+				Console.WriteLine("3. Find Matching Flags.");
+				Console.Write("Please enter the number of your choice: ");
+				string choiceNumberStr = Console.ReadLine();
+				int choiceNumber = 0;
+				if (choiceNumberStr == null)
+				{
+					Console.WriteLine("Please enter a value!");
+					continue;
+				}
+				else
+				{
+					try
+					{
+						choiceNumber = int.Parse(choiceNumberStr);
 					}
 					catch (Exception exc)
 					{
 						Console.WriteLine(exc.Message);
-						return;
-					}
-
-					while (true) {
-						Console.WriteLine();
-						Console.WriteLine("Would you like to save the flags to a file? (yY/nN)");
-						string response = Console.ReadLine();
-						if (response.ToLower() == "y")
-						{
-							Console.WriteLine();
-							Console.WriteLine("If the file already exists the new flags will be appended to it.");
-							Console.Write("Please enter the path and name of the file to save to: ");
-							string newFlagFilePath = Console.ReadLine();
-							if (newFlagFilePath != null && newFlagFilePath != "")
-							{
-								using (StreamWriter sw = new StreamWriter(newFlagFilePath, true))
-								{
-									foreach (string key in flags.Keys)
-									{
-										int flagCode = flags[key];
-										sw.WriteLine(key);
-										sw.WriteLine("0x" + flagCode.ToString("X"));
-									}
-								}
-								break;
-							}
-							else
-							{
-								Console.WriteLine("Please choose a valid path/name for the file!");
-							}
-						}
-						else if (response.ToLower() == "n")
-						{
-							break;
-						}
-						else
-						{
-							Console.WriteLine("Please enter a valid choice!");
-						}
+						continue;
 					}
 				}
-			}
-			else
-			{
-				Console.WriteLine("Please choose a valid number!");
-				return;
+
+				if (choiceNumber == 1)
+				{
+					Console.Write("Please enter the name and path of the FlagFile: ");
+					string flagFilePath = Console.ReadLine();
+					try
+					{
+						ReadFlagFile(flagFilePath);
+					}
+					catch (Exception exc)
+					{
+						Console.WriteLine(exc.Message);
+					}
+				}
+				else if (choiceNumber == 2)
+				{
+					Console.WriteLine();
+					Console.WriteLine("Please enter the name of the file where the desired flag names are located: ");
+					string flagFilePath = Console.ReadLine();
+					if (flagFilePath == null || flagFilePath == "")
+					{
+						Console.WriteLine("Please enter a value!");
+						continue;
+					}
+
+					try
+					{
+						newFlags.Clear();
+						ReadNewFile(flagFilePath);
+
+						SaveFlags();
+
+						foreach (string key in newFlags.Keys)
+						{
+							if (!flags.ContainsKey(key))
+							{
+								int value = newFlags[key];
+								flags.Add(key, value);
+							}
+						}
+					}
+					catch (Exception exc)
+					{
+						Console.WriteLine(exc.Message);
+						continue;
+					}
+				}
+				else if(choiceNumber == 3)
+				{
+					if(flags.Count == 0) 
+					{
+						Console.WriteLine("No flags have been added yet! Please add some first!");
+						continue;
+					}
+					else
+					{
+						break;
+					}
+				}
+				else
+				{
+					Console.WriteLine("Please choose a valid number!");
+					continue;
+				}
 			}
 
 			// Now that we've got the flags, do the execution
-			string fullMatch = null;
-			List<string> results = new List<string>();
-			foreach (string key in flags.Keys)
-			{
-				int result = flagToDecode & flags[key];
-				if (flagToDecode == flags[key])
-				{
-					fullMatch = key + " matched completely! (0x" + flags[key].ToString("X") + ")";
-				}
-				else if (result == flags[key])
-				{
-					results.Add(key + " was a match! (0x" + flags[key].ToString("X") + ")");
-				}
-			}
-
-			Console.WriteLine();
-			if (fullMatch != null || results.Count > 0)
-			{
-				Console.WriteLine("RESULTS:");
-				if (fullMatch != null)
-				{
-					Console.WriteLine(fullMatch);
-					Console.WriteLine();
-				}
-
-				foreach (string result in results)
-				{
-					Console.WriteLine(result);
-				}
-			}
-			else
-			{
-				Console.WriteLine("No matches were found.");
-				Console.WriteLine("The flags you're looking for are not here.");
-			}
+			FindMatchingFlags(flagToDecode);
 
 			return;
 		}
 
+		/// <summary>
+		/// Convert the given hexStr to an integer, interpreted as a hexadecimal number. Also removes any prepended 0x, should there be one.
+		/// </summary>
+		/// <param name="hexStr">The string to convert.</param>
+		/// <returns></returns>
 		private static int HexStrToInt(string hexStr)
 		{
-			if(hexStr != null)
+			if (hexStr != null)
 			{
-				if(hexStr.StartsWith("0x"))
+				if (hexStr.StartsWith("0x"))
 				{
 					hexStr = hexStr.Remove(0, 2);
 				}
@@ -207,7 +173,7 @@ namespace WindowsFlagDecoder
 				{
 					return int.Parse(hexStr, System.Globalization.NumberStyles.HexNumber);
 				}
-				catch(Exception exc)
+				catch (Exception exc)
 				{
 					throw exc;
 				}
@@ -216,11 +182,6 @@ namespace WindowsFlagDecoder
 			return 0;
 		}
 
-		/// <summary>
-		/// Reads the file at the given flagFilePath and puts the flag names/codes in the flags Dictionary. Throws an Exception on error.
-		/// </summary>
-		/// <param name="flagFilePath">The path to the flag file, including the name of the file.</param>
-		/// <exception cref="Exception"></exception>
 		private static void ReadFlagFile(string flagFilePath)
 		{
 			if (File.Exists(flagFilePath))
@@ -243,14 +204,14 @@ namespace WindowsFlagDecoder
 										int flagCode = HexStrToInt(line);
 										flags.Add(flagName, flagCode);
 									}
-									catch (Exception exc)
+									catch (Exception)
 									{
-										throw new Exception("Invalid flag code <" + line + "> found!\n" + exc.Message);
+										Console.WriteLine("Invalid flag code <" + line + "> found!");
 									}
 								}
 								else
 								{
-									throw new Exception("Flag without code <" + flagName + "> found!");
+									Console.WriteLine("Flag without code <" + flagName + "> found!");
 								}
 							}
 						}
@@ -263,77 +224,44 @@ namespace WindowsFlagDecoder
 			}
 		}
 
-		/// <summary>
-		/// Reads, filters, and saves the file at the given newFileName path as a FlagFile. Throws an Exception on Error.
-		/// </summary>
-		/// <param name="newFileName">The path to the file to read, and the name of the file.</param>
-		/// <exception cref="Exception"></exception>
 		private static void ReadNewFile(string newFileName)
 		{
-			if(File.Exists(newFileName))
+			if (File.Exists(newFileName))
 			{
 				string wholeFileStr = File.ReadAllText(newFileName);
-				if(wholeFileStr.Length <= 0) 
+				if (wholeFileStr.Length <= 0)
 				{
 					throw new Exception("The file at <" + newFileName + "> was empty!");
 				}
 
-				List<string> finalMatches = new List<string>();
-				while (true)
-				{
-					Console.WriteLine();
-					Console.WriteLine("Press enter without entering a value to stop filtering.");
-					Console.WriteLine("Please enter the RegEx string used to find all the flags in the document:");
-					string regExStr = Console.ReadLine();
-					if (regExStr == null)
-					{
-						throw new Exception("Please enter a RegEx string!");
-					}
-					else if(regExStr == "")
-					{
-						break;
-					}
+				// Filter the files results into a list with use of RegEx
+				List<string> finalMatches = RegExFilter(wholeFileStr);
 
-					Regex regex = new Regex(regExStr);
-					MatchCollection matches = regex.Matches(wholeFileStr);
-					wholeFileStr = "";
-					finalMatches.Clear();
-					foreach (Match match in matches)
-					{
-						wholeFileStr += match.Value + "\n";
-						finalMatches.Add(match.Value);
-					}
-				}
-
-				// Create the CPP file here
+				// Cleanup files that may still exist from a previous compilation effort
 				string workingDirectory = Directory.GetCurrentDirectory();
-				CreateCppFile(finalMatches, workingDirectory);
+				Cleanup(workingDirectory);
 
-				// Compile cppFile
-				if(File.Exists(workingDirectory + "\\temp.exe"))
-				{
-					File.Delete(workingDirectory + "\\temp.exe");
-					if(File.Exists(workingDirectory + "\\temp.obj"))
-					{
-						File.Delete(workingDirectory + "\\temp.obj");
-					}
-				}
-				AttemptCompile(workingDirectory);
-
-				// Execute cppFile
-				ProcessStartInfo psi2 = new ProcessStartInfo();
-				psi2.FileName = workingDirectory + "\\temp.exe";
+				// A list of line numbers to exclude from the CPP file
+				List<int> excludeLines = new List<int>();
 				while (true)
 				{
-					if (!File.Exists(psi2.FileName))
+					// Generate and save the CPP file here.
+					CreateCppFile(finalMatches, workingDirectory, excludeLines);
+
+					// Attempt to compile the CPP file
+					AttemptCompile(workingDirectory);
+
+					// Check if the compilation was a success, and if not, allow for adjustments to be made and recompilation
+					string executableName = workingDirectory + "\\temp.exe";
+					if (!File.Exists(executableName) && excludeLines.Count == 0)
 					{
 						Console.WriteLine();
-						Console.WriteLine("Could not find <" + psi2.FileName + ">!");
-						Console.WriteLine("This could indicate there were compiler errors. Would you like to remove the problematic flags? (yY/nN)");
+						Console.WriteLine("Could not find <" + executableName + ">!");
+						Console.WriteLine("This could indicate there were compiler errors. See the compiler output above for more info.");
+						Console.Write("Would you like to attempt to remove the problematic lines? (yY/nN): ");
 						string response = Console.ReadLine();
 						if (response.ToLower() == "y")
 						{
-							List<int> excludeLines = new List<int>();
 							Console.WriteLine();
 							while (true)
 							{
@@ -354,18 +282,19 @@ namespace WindowsFlagDecoder
 									Console.WriteLine("Please enter a valid number!");
 								}
 							}
-
-							CreateCppFile(finalMatches, workingDirectory, excludeLines);
-							AttemptCompile(workingDirectory);
 						}
-						else if(response.ToLower() == "n")
+						else if (response.ToLower() == "n")
 						{
-							throw new Exception("Could not find <" + psi2.FileName + ">!");
+							throw new Exception("Could not find <" + executableName + ">!");
 						}
 						else
 						{
 							Console.WriteLine("Please pick a valid option! (yY/nN)");
 						}
+					}
+					else if(!File.Exists(executableName) && excludeLines.Count > 0)
+					{
+						throw new Exception("Could not find <" + executableName + ">!");
 					}
 					else
 					{
@@ -373,14 +302,11 @@ namespace WindowsFlagDecoder
 					}
 				}
 
-				if (File.Exists(workingDirectory + "\\temp.cpp"))
-				{
-					File.Delete(workingDirectory + "\\temp.cpp");
-				}
-
+				// Execute CPP file here
+				ProcessStartInfo psi2 = new ProcessStartInfo();
+				psi2.FileName = workingDirectory + "\\temp.exe";
 				psi2.UseShellExecute = false;
 				psi2.RedirectStandardOutput = true;
-
 				using (Process process = Process.Start(psi2))
 				{
 					using (StreamReader sr = process.StandardOutput)
@@ -390,12 +316,12 @@ namespace WindowsFlagDecoder
 						{
 							string flagName = line;
 							string flagCodeStr = sr.ReadLine();
-							if (!flags.ContainsKey(flagName))
+							if (!newFlags.ContainsKey(flagName))
 							{
 								try
 								{
 									int flagCode = HexStrToInt(flagCodeStr);
-									flags.Add(flagName, flagCode);
+									newFlags.Add(flagName, flagCode);
 								}
 								catch (Exception exc)
 								{
@@ -408,14 +334,8 @@ namespace WindowsFlagDecoder
 					process.WaitForExit();
 				}
 
-				if (File.Exists(workingDirectory + "\\temp.exe"))
-				{
-					File.Delete(workingDirectory + "\\temp.exe");
-				}
-				if (File.Exists(workingDirectory + "\\temp.obj"))
-				{
-					File.Delete(workingDirectory + "\\temp.obj");
-				}
+				// Cleanup the files used for compilation and retrieving the flags
+				Cleanup(workingDirectory);
 			}
 			else
 			{
@@ -423,6 +343,11 @@ namespace WindowsFlagDecoder
 			}
 		}
 
+		/// <summary>
+		/// Attempt to compile the C++ file temp.cpp found in the given workingDirectory into temp.exe. Will print compiler output to the console.
+		/// </summary>
+		/// <param name="workingDirectory">The path where temp.cpp is found.</param>
+		/// <exception cref="Exception"></exception>
 		private static void AttemptCompile(string workingDirectory)
 		{
 			ProcessStartInfo psi = new ProcessStartInfo();
@@ -484,28 +409,20 @@ namespace WindowsFlagDecoder
 			}
 		}
 
-		private static void CreateCppFile(List<string> finalMatches, string workingDirectory, List<int> excludeLines = null)
+		/// <summary>
+		/// Generate the temp.cpp files based on the given flagNames and save it in the given workingDirectory. Exclude lines with numbers in the given excludeLines list.
+		/// </summary>
+		/// <param name="flagNames">A list of the flag names.</param>
+		/// <param name="workingDirectory">The directory where to save the temp.cpp file.</param>
+		/// <param name="excludeLines">Lines to exclude from the temp.cpp file.</param>
+		private static void CreateCppFile(List<string> flagNames, string workingDirectory, List<int> excludeLines = null)
 		{
 			string cppFileStr = "#include <iostream>\n";
 			cppFileStr += "#include <Windows.h>\n";
-
-			Console.WriteLine();
-			Console.WriteLine("Press enter without a value to stop adding headers.");
-			Console.WriteLine("Some files may require additional header (particularly non-Windows files) in order to be dynamically retrieved. Add them here.");
-			while(true)
-			{
-				string headerToAdd = Console.ReadLine();
-				if(headerToAdd == null || headerToAdd == "")
-				{
-					break;
-				}
-				cppFileStr += "#include <" + headerToAdd + ">\n";
-			}
-
 			cppFileStr += "int main()\n";
 			cppFileStr += "{\n";
 			int lineCount = 4;
-			foreach (string flagName in finalMatches)
+			foreach (string flagName in flagNames)
 			{
 				lineCount += 1;
 				if (excludeLines != null && excludeLines.Contains(lineCount))
@@ -519,6 +436,152 @@ namespace WindowsFlagDecoder
 			using (StreamWriter sw = new StreamWriter(workingDirectory + "\\temp.cpp"))
 			{
 				sw.Write(cppFileStr);
+			}
+		}
+
+		/// <summary>
+		/// Go throught the flags Dictionary and attempt to check if any of the flags could've been used in the creation of the given flagToDecode.
+		/// </summary>
+		/// <param name="flagToDecode">The flag code to check.</param>
+		private static void FindMatchingFlags(int flagToDecode)
+		{
+			string fullMatch = null;
+			List<string> results = new List<string>();
+			foreach (string key in flags.Keys)
+			{
+				int result = flagToDecode & flags[key];
+				if (flagToDecode == flags[key])
+				{
+					fullMatch = key + " matched completely! (0x" + flags[key].ToString("X") + ")";
+				}
+				else if (result == flags[key])
+				{
+					results.Add(key + " was a match! (0x" + flags[key].ToString("X") + ")");
+				}
+			}
+
+			Console.WriteLine();
+			if (fullMatch != null || results.Count > 0)
+			{
+				Console.WriteLine("RESULTS:");
+				if (fullMatch != null)
+				{
+					Console.WriteLine(fullMatch);
+					Console.WriteLine();
+				}
+
+				foreach (string result in results)
+				{
+					Console.WriteLine(result);
+				}
+			}
+			else
+			{
+				Console.WriteLine("No matches were found.");
+				Console.WriteLine("The flags you're looking for are not here.");
+			}
+		}
+
+		/// <summary>
+		/// Attempt to save the flags loaded in so far.
+		/// </summary>
+		private static void SaveFlags()
+		{
+			while (true)
+			{
+				Console.WriteLine();
+				Console.WriteLine("Would you like to save the flags to a file? (yY/nN)");
+				string response = Console.ReadLine();
+				if (response.ToLower() == "y")
+				{
+					Console.WriteLine();
+					Console.WriteLine("If the file already exists the new flags will be appended to it.");
+					Console.WriteLine("Please enter the path and name of the file to save to: ");
+					string newFlagFilePath = Console.ReadLine();
+					if (newFlagFilePath != null && newFlagFilePath != "")
+					{
+						using (StreamWriter sw = new StreamWriter(newFlagFilePath, true))
+						{
+							foreach (string key in newFlags.Keys)
+							{
+								int flagCode = newFlags[key];
+								sw.WriteLine(key);
+								sw.WriteLine("0x" + flagCode.ToString("X"));
+							}
+						}
+						break;
+					}
+					else
+					{
+						Console.WriteLine("Please choose a valid path/name for the file!");
+					}
+				}
+				else if (response.ToLower() == "n")
+				{
+					break;
+				}
+				else
+				{
+					Console.WriteLine("Please enter a valid choice!");
+				}
+			}
+		}
+
+		/// <summary>
+		/// Filter entries from the given dataToFilter using RegEx and return them as a list of strings.
+		/// </summary>
+		/// <param name="dataToFilter">The data to filter.</param>
+		/// <returns></returns>
+		private static List<string> RegExFilter(string dataToFilter)
+		{
+			List<string> finalMatches = new List<string>();
+			while (true)
+			{
+				Console.WriteLine();
+				Console.WriteLine("Press enter without entering a value to stop filtering.");
+				Console.WriteLine("Please enter the RegEx string used to find all the flags in the document:");
+				string regExStr = Console.ReadLine();
+				if (regExStr == null)
+				{
+					Console.WriteLine("Please enter a RegEx string!");
+					continue;
+				}
+				else if (regExStr == "")
+				{
+					break;
+				}
+
+				Regex regex = new Regex(regExStr);
+				MatchCollection matches = regex.Matches(dataToFilter);
+				dataToFilter = "";
+				finalMatches.Clear();
+				foreach (Match match in matches)
+				{
+					dataToFilter += match.Value + "\n";
+					finalMatches.Add(match.Value);
+				}
+			}
+
+			return finalMatches;
+		}
+
+		/// <summary>
+		/// Remove temp.cpp, temp.exe, and temp.obj if the files exist.
+		/// </summary>
+		/// <param name="workingDirectory">The directory these files exist in.</param>
+		private static void Cleanup(string workingDirectory)
+		{
+			if (File.Exists(workingDirectory + "\\temp.cpp"))
+			{
+				File.Delete(workingDirectory + "\\temp.cpp");
+			}
+			if(File.Exists(workingDirectory + "\\temp.exe"))
+			{
+				File.Delete(workingDirectory + "\\temp.exe");
+			}
+			if(File.Exists(workingDirectory + "\\temp.obj"))
+			{
+				File.Delete(workingDirectory + "\\temp.obj");
 			}
 		}
 	}
