@@ -153,6 +153,9 @@ namespace WindowsFlagDecoder
 			// Now that we've got the flags, do the execution
 			FindMatchingFlags(flagToDecode);
 
+			Console.WriteLine("Press Enter to exit...");
+			Console.ReadLine();
+
 			return;
 		}
 
