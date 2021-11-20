@@ -1,5 +1,5 @@
 # Windows Flag Decoder
-A tool created to assist with the decoding of Windows flags using bitwise AND (&amp;) operation.
+A Windows command line tool created to assist with the decoding of Windows flags using bitwise AND (&amp;) operation.
 
 # IMPORTANT
 Do note that this tool is not perfect.
